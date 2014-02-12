@@ -10,6 +10,8 @@
   "dependencies": {
     "commander": "~2.1.0",
     "request": "~2.33.0",
-    "cheerio": "~0.13.1"
+    "cheerio": "~0.13.1",
+    "q": "~1.0.0",
+    "node-phantom": "~0.2.5"
   }
 }
