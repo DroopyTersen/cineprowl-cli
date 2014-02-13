@@ -57,13 +57,13 @@ if(program.web) {
 	if (program.web === "kill") {
 		//TODO: figure out how to kill it
 	} else {
-		var appPath = __dirname.replace(/cli\\bin/i, "web\\app.js")
+		var appPath = __dirname.replace(/cli\\bin/i, "mobile\\app.js")
 		var cmd = 'node ' + appPath;
 		console.log(cmd);
-		console.log("Started CineProwl Web Server...")
+		console.log("Started CineProwl Mobile Web Server...")
 		var child = exec(cmd, function(err, stdout, stderr) {
 			if (err) {
-				console.log("Killed CineProwl Web Server.");
+				console.log("Killed CineProwl Mobile Web Server.");
 				console.log(err);
 				console.log(stderr);
 			} 

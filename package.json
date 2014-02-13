@@ -14,6 +14,7 @@
     "q": "~1.0.0",
     "node-phantom": "~0.2.5",
     "droopy-moviedb": "~0.0.2",
-    "droopy-imdb": "~0.0.0"
+    "droopy-imdb": "~0.0.0",
+    "http-proxy": "~1.0.2"
   }
 }
