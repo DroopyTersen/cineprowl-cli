@@ -12,6 +12,8 @@
     "request": "~2.33.0",
     "cheerio": "~0.13.1",
     "q": "~1.0.0",
-    "node-phantom": "~0.2.5"
+    "node-phantom": "~0.2.5",
+    "droopy-moviedb": "~0.0.2",
+    "droopy-imdb": "~0.0.0"
   }
 }

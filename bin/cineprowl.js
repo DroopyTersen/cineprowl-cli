@@ -3,7 +3,7 @@ var program = require('commander'),
 	torrentHunter = require("../lib/torrentHunter"),
 	fileSync = require("../lib/fileSync"),
 	exec = require('child_process').exec,
-	movieService = new(require("../../Web/dataaccess/mongo/MovieService"))();
+	vlcReceiver = require('../lib/vlcReceiver');
 
 program
   .version('0.0.1')
@@ -11,6 +11,7 @@ program
   .option('-s, --sync', 'Sync video libraries')
   .option('-m, --mongo [action]', 'Start or stop mongo server')
   .option('-w, --web', 'Start the web server')
+  .option('-v, --vlc [port]', 'Start the VLC receiver')
   .parse(process.argv);
 
 if (program.torrents) {
@@ -51,16 +52,10 @@ if(program.mongo) {
 		});		
 	}
 }
+
 if(program.web) {
 	if (program.web === "kill") {
-		var cmd = 'taskkill /F /IM mongod.exe';
-		console.log(cmd);
-		var child = exec(cmd, function(err, stdout, stderr) {
-			if (err) {
-				console.log(err);
-				console.log(stderr);
-			}
-		});
+		//TODO: figure out how to kill it
 	} else {
 		var appPath = __dirname.replace(/cli\\bin/i, "web\\app.js")
 		var cmd = 'node ' + appPath;
@@ -74,4 +69,12 @@ if(program.web) {
 			} 
 		});		
 	}
+}
+
+if (program.vlc) {
+	var port = null;
+	if (program.vlc !== true) {
+		port = program.vlc;
+	}
+	vlcReceiver.start({ port: port });
 }
