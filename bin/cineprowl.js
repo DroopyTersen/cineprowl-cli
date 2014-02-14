@@ -23,11 +23,10 @@ if (program.torrents) {
 				console.log("\t%s  - %s comments", torrent.fullname, torrent.comments);
 			});
 		});
-		process.exit();
 	});
 }
 
-if (program.filesync) {
+if (program.sync) {
 	fileSync();
 }
 
