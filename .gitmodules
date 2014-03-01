@@ -1,0 +1,3 @@
+[submodule "cineprowl-services"]
+	path = cineprowl-services
+	url = https://github.com/DroopyTersen/cineprowl-services
