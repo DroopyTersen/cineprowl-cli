@@ -16,18 +16,20 @@ program
 
 if (program.torrents) {
 	console.log('Searching Torrents...');
-	torrentHunter.search(20).then(torrentHunter.removeOwned).then(function (notOwned) {
-		notOwned.forEach(function(m){
-			console.log("\n%s", m.name);
-			m.items.forEach(function(torrent) {
-				console.log("\t%s  - %s comments", torrent.fullname, torrent.comments);
+	torrentHunter.search(20)
+		.then(torrentHunter.removeOwned)
+		.then(function (notOwned) {
+			notOwned.forEach(function(m){
+				console.log("\n%s", m.name);
+				m.items.forEach(function(torrent) {
+					console.log("\t%s  - %s comments", torrent.fullname, torrent.comments);
+				});
 			});
 		});
-	});
 }
 
 if (program.sync) {
-	fileSync();
+	fileSync.execute();
 }
 
 if(program.mongo) {
