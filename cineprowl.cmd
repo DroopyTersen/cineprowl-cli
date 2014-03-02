@@ -1,5 +1,5 @@
 @IF EXIST "%~dp0\node.exe" (
-  "%~dp0\node.exe"  "C:\gitWip\CineProwl\Cli\bin\cineprowl" %*
+  "%~dp0\node.exe"  "C:\gitWip\cineprowl-cli\bin\cineprowl" %*
 ) ELSE (
-  node  "C:\gitWip\CineProwl\Cli\bin\cineprowl" %*
+  node  "C:\gitWip\cineprowl-cli\bin\cineprowl" %*
 )
