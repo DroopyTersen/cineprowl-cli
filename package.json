@@ -8,13 +8,17 @@
     "cineprowl": "bin/cineprowl"
   },
   "dependencies": {
-    "commander": "~2.1.0",
-    "request": "~2.33.0",
     "cheerio": "~0.13.1",
-    "q": "~1.0.0",
-    "node-phantom": "~0.2.5",
-    "droopy-moviedb": "~0.0.2",
+    "cineprowl-services": "droopytersen/cineprowl-services",
+    "commander": "~2.1.0",
     "droopy-imdb": "~0.0.0",
-    "http-proxy": "~1.0.2"
+    "droopy-moviedb": "~0.0.2",
+    "http-proxy": "~1.0.2",
+    "mime": "^1.2.11",
+    "node-phantom": "~0.2.5",
+    "pump": "^1.0.0",
+    "q": "~1.0.0",
+    "range-parser": "^1.0.2",
+    "request": "~2.33.0"
   }
 }

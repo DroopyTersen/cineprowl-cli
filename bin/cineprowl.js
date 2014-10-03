@@ -3,6 +3,7 @@ var program = require('commander'),
 	torrentHunter = require("../lib/torrentHunter"),
 	fileSync = require("../lib/fileSync"),
 	exec = require('child_process').exec,
+	videoStreamer = require("../lib/videoStreamer"),
 	vlcReceiver = require('../lib/vlcReceiver');
 
 program
@@ -11,7 +12,8 @@ program
   .option('-s, --sync', 'Sync video libraries')
   .option('-m, --mongo [action]', 'Start or stop mongo server')
   .option('-w, --web', 'Start the web server')
-  .option('-v, --vlc [port]', 'Start the VLC receiver')
+  .option('-v, --vlc [port]', 'Start the receiver')
+  .option('-h, --stream', 'Start the Video streamer')
   .parse(process.argv);
 
 if (program.torrents) {
@@ -78,4 +80,8 @@ if (program.vlc) {
 		port = program.vlc;
 	}
 	vlcReceiver.start({ port: port });
+}
+
+if (program.stream) {
+	videoStreamer.start();
 }
