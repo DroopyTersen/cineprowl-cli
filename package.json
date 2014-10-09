@@ -13,6 +13,7 @@
     "commander": "~2.1.0",
     "droopy-imdb": "~0.0.0",
     "droopy-moviedb": "~0.0.2",
+    "fluent-ffmpeg": "^2.0.0-rc2",
     "http-proxy": "~1.0.2",
     "mime": "^1.2.11",
     "node-phantom": "~0.2.5",
