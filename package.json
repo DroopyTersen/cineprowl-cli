@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "cheerio": "~0.13.1",
-    "cineprowl-services": "droopytersen/cineprowl-services",
+    "Cineprowl-Models": "https://github.com/droopytersen/cineprowl-models",
+    "Cineprowl-Services": "https://github.com/droopytersen/cineprowl-services",
     "commander": "~2.1.0",
     "droopy-imdb": "~0.0.0",
     "droopy-moviedb": "~0.0.2",

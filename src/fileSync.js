@@ -1,6 +1,6 @@
 var fs = require("fs"),
 	imdbService = new(require("droopy-imdb"))(),
-	movieService = new(require("CineProwl-Services")).MovieService(),
+	movieService = new(require("../../CineProwl-Services")).MovieService(),
 	Q = require("q"),
 	config = {
 		folderPaths: [
@@ -30,6 +30,7 @@ exports.execute = function() {
 		//get all the sub folders of that library
 		Q.nfcall(fs.readdir, libraryPath)
 			.then(function(movieFolders) {
+                movieFolders = movieFolders.sort();
 				return processMovieFolders(libraryPath, movieFolders);
 			});
 	});
@@ -38,6 +39,7 @@ exports.execute = function() {
 
 	//Need to hit MovieDB synchrounously to avoid thresholds (30 calls in 10 seconds);
 	setTimeout(function(){
+        console.log("New folders: " + newFolders.join(", "));
 		newFolders.forEach(function(file, index){
 			setTimeout(function(){
 				processNewFile(file);
@@ -76,6 +78,7 @@ var processMovieFolder = function(libraryPath, parentFolder) {
 		.then(checkIfExists)
 		.then(function(file){
 			if (file) {
+                console.log(file)
 				newFolders.push(file);
 			}
 		})
@@ -87,18 +90,22 @@ var processMovieFolder = function(libraryPath, parentFolder) {
 };
 
 var getMovieFile = function(libraryPath, movieFolder) {
+
 	var folderpath = libraryPath + "\\" + movieFolder;
 	return Q.nfcall(fs.readdir, folderpath)
 		.then(function(files) {
+  
 			return Q.all(files.map(function(filename) {
 					return getFileStats(libraryPath, movieFolder, filename);
 				}))
 				.then(function(fileObjs) {
+                    
 					return fileObjs.filter(function(fileObj) {
 						return fileObj !== null;
 					});
 				})
 				.then(function(nonNullFileObjs) {
+                    
 					return nonNullFileObjs.length ? nonNullFileObjs[0] : null;
 				});
 		});
@@ -117,6 +124,7 @@ var getQuality = function(size) {
 };
 
 var getFileStats = function(path, folder, filename) {
+
 	var filepath = path + "\\" + folder + "/" + filename;
 	var dotSplit = filename.split(".");
 	var extension = dotSplit.length > 1 ? dotSplit[dotSplit.length - 1] : null;
@@ -125,11 +133,14 @@ var getFileStats = function(path, folder, filename) {
 	}
 	return Q.nfcall(fs.stat, filepath)
 		.then(function(stats) {
+           
 			if (!stats.isFile()) {
 				return null;
 			}
 			else {
-				if (config.videoExtensions[extension] && filename.toLowerCase().indexOf("sample") === -1 && filename.toLowerCase().indexOf("etrg") === -1) {
+				if (config.videoExtensions[extension] && 
+                filename.toLowerCase().indexOf("sample") === -1 
+                && filename.toLowerCase().indexOf("etrg") !== 0) {
 					var size = (stats.size / 1048576).toFixed(2);
 					return {
 						parentFolder: folder,

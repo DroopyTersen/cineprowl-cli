@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 var program = require('commander'),
-	torrentHunter = require("../lib/torrentHunter"),
-	fileSync = require("../lib/fileSync"),
+	torrentHunter = require("../src/torrentHunter"),
+	fileSync = require("../src/fileSync"),
 	exec = require('child_process').exec,
-	videoStreamer = require("../lib/videoStreamer"),
-	vlcReceiver = require('../lib/vlcReceiver');
+	videoStreamer = require("../src/videoStreamer"),
+	vlcReceiver = require('../src/vlcReceiver');
 
 program
   .version('0.0.1')
