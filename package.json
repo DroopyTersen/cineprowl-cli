@@ -10,6 +10,7 @@
   "dependencies": {
     "cheerio": "~0.13.1",
     "cineprowl-services": "github:droopytersen/cineprowl-services",
+    "cineprowl-models": "github:droopytersen/cineprowl-models",
     "commander": "~2.1.0",
     "droopy-imdb": "^1.0.1",
     "droopy-moviedb": "~0.0.2",
