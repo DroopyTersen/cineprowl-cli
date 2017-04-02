@@ -1,8 +1,7 @@
 var fs = require("fs");
 var imdbService = require("droopy-imdb");
 var movieService = require("./movieService");
-var Q = require("q");
-
+var path = require("path");
 var config = {
 	folderPaths: [
 		// "\\\\IX4-300D\\Movies\\DvdRips",
@@ -25,92 +24,75 @@ var config = {
 
 var movieDbService = new(require("droopy-moviedb"))(config.movieDb.key);
 
+var promisify = function(fn, ...args) {
 
-exports.execute = function () {
-	//Foreach library folder
-	config.folderPaths.forEach(function (libraryPath) {
-		//get all the sub folders of that library
-		Q.nfcall(fs.readdir, libraryPath)
-			.then(function(movieFolders) {
-                movieFolders = movieFolders.sort();
-				return processMovieFolders(libraryPath, movieFolders);
-			}).catch(err => console.log(err));
-	});
-
-	console.log("Checking for new files...");
-
-	//Need to hit MovieDB synchrounously to avoid thresholds (30 calls in 10 seconds);
-	setTimeout(function(){
-        console.log("New folders: " + newFolders.join(", "));
-		newFolders.forEach(function(file, index){
-			setTimeout(function(){
-				processNewFile(file);
-			}, (index + 1) * 1500);
-		});
-	}, 20000);
+	return new Promise((resolve, reject) => {
+		var cb = (err, val) => {
+			if (err) reject(err)
+			else resolve (val);
+		}
+		args.push(cb);
+		fn.apply(null, args)
+	})
 };
 
-var newFolders = [];
-
-var processMovieFolders = function (libraryPath, movieFolders) {
-	//Process each movie folder in the library
-	return Q.all(movieFolders.map(function (movieFolder) {
-		return processMovieFolder(libraryPath, movieFolder);
-	}));
+var getDirectories = function(folder) {
+	return promisify(fs.readdir, folder)
+			.then(folders => folders.sort());
 };
+
+exports.execute = function() {
+	var promises = config.folderPaths.map(path => {
+		return getDirectories(path)
+			.then(folders => findNewMovieFolders(path, folders))
+			.then(val => {
+				console.log(val);
+				return val;
+			})
+			.then(throttleMovieInserts)
+			.catch(err => console.log(err))
+	})
+}
+
+var throttleMovieInserts = function(newFiles) {
+	newFiles.forEach((file, index) => {
+		setTimeout(() => processNewFile(f), (index + 1) * 1000);
+	})
+}
+
+var findNewMovieFolders = function (libraryPath, folders) {
+	return Promise.all(folders.map(f => processMovieFolder(libraryPath, f)))
+		.then(files => files.filter(f => f !== null))
+}
 
 var processNewFile = function (file) {
-	console.log("\n" + file.parentFolder);
 	searchMovieDb(file)
-		.then(getImdbRating)
+		.then(setImdbRating)
 		.then(insertMovie)
 		.then(function (movie) {
 			if (!movie) return null;
 			var message = "\n\nINSERTED: " + movie.title + "\n\n";
 			console.log(message);
 		})
-		.fail(function (error) {
-			console.log("\n\n=== ERROR ===");
-			console.log(error + "\n");
-		});
 };
 
 var processMovieFolder = function (libraryPath, parentFolder) {
 	return getMovieFile(libraryPath, parentFolder)
 		.then(checkIfExists)
-		.then(function (file) {
-			if (file) {
-                console.log(file)
-				newFolders.push(file);
-			}
-		})
-		.fail(function () {
-			console.log("\n=== ERROR ===");
-			console.log(libraryPath + parentFolder);
-			console.log(JSON.stringify(arguments) + "\n");
-		});
 };
 
+var getMovieFile = function(parent, folder) {
+	var folderpath = path.normalize(parent + "\\" + folder);
 
-var getMovieFile = function(libraryPath, movieFolder) {
-
-	var folderpath = libraryPath + "\\" + movieFolder;
-	return Q.nfcall(fs.readdir, folderpath)
-		.then(function(files) {
-  
-			return Q.all(files.map(function(filename) {
-					return getFileStats(libraryPath, movieFolder, filename);
-				}))
-				.then(function(fileObjs) {
-                    
-					return fileObjs.filter(function(fileObj) {
-						return fileObj !== null;
-					});
-				})
-				.then(function(nonNullFileObjs) {
-					return nonNullFileObjs.length ? nonNullFileObjs[0] : null;
-				});
-		});
+	return promisify(fs.readdir, folderpath)
+		.then(filenames => {
+			return Promise.all(filenames.map(f => {
+				var filepath = path.normalize(`${parent}/${folder}/${f}`);
+				return getFileStats(filepath);
+			}))
+		})
+		.then(fileStats => fileStats.filter(f => f !== null))
+		.then(fileStats => fileStats.length ? fileStats[0] : null);
 };
 
 var getQuality = function (size) {
@@ -123,56 +105,35 @@ var getQuality = function (size) {
 	}
 };
 
-var getFileStats = function(path, folder, filename) {
-
-	var filepath = path + "\\" + folder + "/" + filename;
-	var dotSplit = filename.split(".");
-	var extension = dotSplit.length > 1 ? dotSplit[dotSplit.length - 1] : null;
-	if (extension === null) {
-		return null;
-	}
-	return Q.nfcall(fs.stat, filepath)
-		.then(function(stats) {
-           
-			if (!stats.isFile()) {
-				return null;
-			}
-			else {
-				if (config.videoExtensions[extension] && 
-                filename.toLowerCase().indexOf("sample") === -1 
-                && filename.toLowerCase().indexOf("etrg") !== 0) {
-					var size = (stats.size / 1048576).toFixed(2);
-					return {
-						parentFolder: folder,
-						library: path,
-						filename: filename,
-						filepath: path + "\\" + folder + "\\" + filename,
-						extension: extension,
-						size: size,
-						quality: getQuality(size)
-					};
-				} else {
-					return null;
-				}
-			}
-		})
-		.fail(function () {
-			console.log("Failed to get file status for " + filepath);
-			console.log(arguments);
-		});
+var getFileStats = function(filepath) {
+	var extension = path.extname(filepath);
+	var filename = path.basename(filepath).toLowerCase();
+	var parentPath = path.dirname(filepath);
+	return promisify(fs.stat, filepath).then(stats => {
+		if (
+			stats.isFile()
+			&& config.videoExtensions[extension]
+			&& filename.indexOf("sample") === -1
+			&& !filename.startsWith("etrg")
+		) {
+			var size = (stats.size / 1048576).toFixed(2);
+			return {
+				parentFolder: path.basename(parentPath),
+				library: path.dirname(parentPath),
+				filename: filename,
+				filepath,
+				extension,
+				size,
+				quality: getQuality(size)
+			};
+		} else return null;
+	})
 };
 
 var checkIfExists = function (file) {
 	if (!file) return null;
-
-	return movieService.checkIfExists({
-		"file.filename": file.filename,
-		"file.parentFolder": file.parentFolder
-	}).then(function (exists) {
-		return !exists ? file : null;
-	}, function () {
-		console.log("Couldn't check " + file.parentFolder)
-	});
+	var query = { "file.parentFolder": file.parentFolder };
+	return movieService.checkIfExists(query).then(exists => !exists ? file : null)
 };
 
 var searchMovieDb = function (file) {
@@ -191,26 +152,21 @@ var searchMovieDb = function (file) {
 
 	console.log("Searching: " + search);
 	return movieDbService.searchForOne(search)
-		.then(function (movie) {
-			if (movie) {
-				movie.file = file;
-			}
-			return movie;
-		}, function () {
-			console.log("Couldn't find " + search)
+		.then(movie => {
+			if (movie) movie.file = file;
+			return movie
 		});
 };
 
-var getImdbRating = function (movie) {
-	if (!movie) return null;
-	return imdbService.getRating(movie.imdb_id).then(function (rating) {
-		movie.rating = rating;
-		return movie;
-	});
+var setImdbRating = function (movie) {
+	return imdbService.getRating(movie.imdb_id)
+		.then(rating => {
+			movie.rating = rating;
+			return movie;
+		})
 };
 
 var insertMovie = function (movie) {
-	if (!movie) return null;
 	movie.watched = false;
 	return movieService.insert(movie);
 };
